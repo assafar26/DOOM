@@ -87,7 +87,7 @@ int		doPointerWarp = POINTER_WARP_COUNTDOWN;
 // replace each 320x200 pixel with multiply*multiply pixels.
 // According to Dave Taylor, it still is a bonehead thing
 // to use ....
-static int	multiply=1;
+static int	multiply=SCREEN_MUL;
 
 
 //
@@ -374,6 +374,97 @@ void I_FinishUpdate (void)
     }
 
     // scales the screen size before blitting it
+if (multiply ==  4)
+{
+	unsigned int *olineptrs[4];
+	unsigned int *ilineptr;
+	int x, y, i;
+	unsigned int fouropixels[4];
+	unsigned int fouripixels;
+
+	ilineptr = (unsigned int *) (screens[0]);
+
+	for (i=0 ; i<4 ; i++)
+	    olineptrs[i] = (unsigned int *) &image->data[i*X_width];
+
+	y = SCREENHEIGHT;
+
+	while (y--)
+	{
+	    x = SCREENWIDTH;
+	    do
+	    {
+		fouripixels = *ilineptr++;
+		fouropixels[0] = 
+			(fouripixels & 0xff000000)
+		    |	((fouripixels>>8) & 0xff0000)
+		    |	((fouripixels>>16) & 0xff00)
+		    |	((fouripixels>>24) & 0xff);
+		fouropixels[1] = 
+			((fouripixels <<8) & 0xff000000)
+		    |	((fouripixels) & 0xffff0000)
+		    |	((fouripixels>>8) & 0xff00)
+		    |	((fouripixels>>16) & 0xff);
+		fouropixels[2] = 
+			((fouripixels <<16)& 0xff000000)
+		    |	((fouripixels << 8) & 0xff0000)
+		    |	((fouripixels) & 0xff00)
+		    |	((fouripixels >> 8) & 0xff);
+		fouropixels[3] = 
+			((fouripixels<<24) & 0xff000000)
+		    |	((fouripixels<<16) & 0xffff00)
+		    |	((fouripixels<<8) & 0xff00)
+		    |	((fouripixels) & 0xff);
+		    /*
+		eightopixels[3] = 
+			((eightipixels<<24) & 0xff000000)
+		    |	((eightipixels<<16) & 0xffff00)
+		    |	((eightipixels<<8) & 0xff00)
+		    |	((eightipixels) & 0xff);
+		    */
+#ifdef __BIG_ENDIAN__
+		*olineptrs[0]++ = fouropixels[0];
+		*olineptrs[1]++ = fouropixels[0];
+		*olineptrs[2]++ = fouropixels[0];
+		*olineptrs[3]++ = fouropixels[0];
+		*olineptrs[0]++ = fouropixels[1];
+		*olineptrs[1]++ = fouropixels[1];
+		*olineptrs[2]++ = fouropixels[1];
+		*olineptrs[3]++ = fouropixels[1];
+		*olineptrs[0]++ = fouropixels[2];
+		*olineptrs[1]++ = fouropixels[2];
+		*olineptrs[2]++ = fouropixels[2];
+		*olineptrs[3]++ = fouropixels[2];
+		*olineptrs[0]++ = fouropixels[3];
+		*olineptrs[1]++ = fouropixels[3];
+		*olineptrs[2]++ = fouropixels[3];
+		*olineptrs[3]++ = fouropixels[3];
+#else
+		*olineptrs[0]++ = fouropixels[3];
+		*olineptrs[1]++ = fouropixels[3];
+		*olineptrs[2]++ = fouropixels[3];
+		*olineptrs[3]++ = fouropixels[3];
+		*olineptrs[0]++ = fouropixels[2];
+		*olineptrs[1]++ = fouropixels[2];
+		*olineptrs[2]++ = fouropixels[2];
+		*olineptrs[3]++ = fouropixels[2];
+		*olineptrs[0]++ = fouropixels[1];
+		*olineptrs[1]++ = fouropixels[1];
+		*olineptrs[2]++ = fouropixels[1];
+		*olineptrs[3]++ = fouropixels[1];
+		*olineptrs[0]++ = fouropixels[0];
+		*olineptrs[1]++ = fouropixels[0];
+		*olineptrs[2]++ = fouropixels[0];
+		*olineptrs[3]++ = fouropixels[0];
+#endif
+	    } while (x-=4);
+	    olineptrs[0] += 3*X_width/4;
+	    olineptrs[1] += 3*X_width/4;
+	    olineptrs[2] += 3*X_width/4;
+	    olineptrs[3] += 3*X_width/4;
+	}
+
+    }    // scales the screen size before blitting it
     if (multiply == 2)
     {
 	unsigned int *olineptrs[2];
@@ -394,10 +485,12 @@ void I_FinishUpdate (void)
 	    do
 	    {
 		fouripixels = *ilineptr++;
-		twoopixels =	(fouripixels & 0xff000000)
+		twoopixels =	
+			(fouripixels & 0xff000000)
 		    |	((fouripixels>>8) & 0xffff00)
 		    |	((fouripixels>>16) & 0xff);
-		twomoreopixels =	((fouripixels<<16) & 0xff000000)
+		twomoreopixels =	
+			((fouripixels<<16) & 0xff000000)
 		    |	((fouripixels<<8) & 0xffff00)
 		    |	(fouripixels & 0xff);
 #ifdef __BIG_ENDIAN__
@@ -436,13 +529,16 @@ void I_FinishUpdate (void)
 	    do
 	    {
 		fouripixels = *ilineptr++;
-		fouropixels[0] = (fouripixels & 0xff000000)
+		fouropixels[0] = 
+			(fouripixels & 0xff000000)
 		    |	((fouripixels>>8) & 0xff0000)
 		    |	((fouripixels>>16) & 0xffff);
-		fouropixels[1] = ((fouripixels<<8) & 0xff000000)
+		fouropixels[1] = 
+			((fouripixels<<8) & 0xff000000)
 		    |	(fouripixels & 0xffff00)
 		    |	((fouripixels>>8) & 0xff);
-		fouropixels[2] = ((fouripixels<<16) & 0xffff0000)
+		fouropixels[2] = 
+		((fouripixels<<16) & 0xffff0000)
 		    |	((fouripixels<<8) & 0xff00)
 		    |	(fouripixels & 0xff);
 #ifdef __BIG_ENDIAN__
@@ -473,12 +569,12 @@ void I_FinishUpdate (void)
 	}
 
     }
-    else if (multiply == 4)
+    /*else if (multiply == 4)
     {
 	// Broken. Gotta fix this some day.
 	void Expand4(unsigned *, double *);
   	Expand4 ((unsigned *)(screens[0]), (double *) (image->data));
-    }
+    }*/
 
     if (doShm)
     {
@@ -816,6 +912,7 @@ void I_InitGraphics(void)
 					attribmask,
 					&attribs );
 
+    XInstallColormap( X_display, X_cmap );	
     XDefineCursor(X_display, X_mainWindow,
 		  createnullcursor( X_display, X_mainWindow ) );
 
